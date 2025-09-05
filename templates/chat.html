@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCare - AI Health Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            color: rgba(255,255,255,0.9);
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .card h2 {
+            color: #4a5568;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .icon {
+            font-size: 1.5rem;
+        }
+
+        /* Chat Section */
+        .mode-toggle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .mode-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #f8fafc;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e0 #f8fafc;
+        }
+
+        .chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-box::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .chat-box::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 10px;
+        }
+
+        .chat-message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 15px;
+            line-height: 1.5;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .user-message {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            margin-left: 20%;
+            text-align: right;
+        }
+
+        .bot-message {
+            background: #e2e8f0;
+            color: #2d3748;
+            margin-right: 20%;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .send-btn {
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Journal Section */
+        .journal-entry {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            outline: none;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .journal-entry:focus {
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .journal-history {
+            height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e2e8f0;
+            border-radius: 15px;
+            padding: 15px;
+            background: #f8fafc;
+        }
+
+        .journal-entry-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #4facfe;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .journal-date {
+            font-weight: 600;
+            color: #4facfe;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+
+        .journal-text {
+            color: #4a5568;
+            line-height: 1.5;
+        }
+
+        /* Username Section */
+        .username-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .username-input {
+            padding: 10px 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 1rem;
+            margin-right: 10px;
+            outline: none;
+        }
+
+        .username-input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .set-username-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .set-username-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .current-user {
+            color: white;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 10px 15px;
+            background: #e2e8f0;
+            border-radius: 15px;
+            margin-right: 20%;
+            margin-bottom: 15px;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #cbd5e0;
+            border-radius: 50%;
+            animation: bounce 1.4s ease-in-out infinite both;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes bounce {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 MindCare</h1>
+            <p>Your AI-powered health companion for medical guidance and mental wellness</p>
+        </div>
+
+        <div class="username-section">
+            <input type="text" id="usernameInput" class="username-input" placeholder="Enter your username">
+            <button onclick="setUsername()" class="set-username-btn">Set Username</button>
+            <div id="currentUser" class="current-user"></div>
+        </div>
+
+        <div class="main-content">
+            <!-- Chat Section -->
+            <div class="card">
+                <h2><span class="icon">🤖</span>AI Health Assistant</h2>
+                
+                <div class="mode-toggle">
+                    <span class="mode-label">Friend Mode</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="modeToggle">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="mode-label">Therapist Mode</span>
+                </div>
+
+                <div id="chatBox" class="chat-box">
+                    <div class="chat-message bot-message">
+                        <strong>MindCare:</strong> Hello! I'm here to help you with health-related questions and provide support. Toggle between Friend and Therapist modes above. How can I assist you today?
+                    </div>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <input type="text" id="chatInput" class="chat-input" placeholder="Ask me anything about your health..." onkeypress="handleChatKeyPress(event)">
+                    <button onclick="sendMessage()" class="send-btn">Send</button>
+                </div>
+            </div>
+
+            <!-- Journal Section -->
+            <div class="card">
+                <h2><span class="icon">📔</span>Personal Journal</h2>
+                
+                <textarea id="journalEntry" class="journal-entry" placeholder="Write about your thoughts, feelings, or health experiences..."></textarea>
+                
+                <button onclick="saveJournal()" class="save-btn">💾 Save Entry</button>
+                
+                <div id="journalHistory" class="journal-history">
+                    <!-- Journal entries will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize username
+        window.onload = function() {
+            const savedUsername = localStorage.getItem("username");
+            if (savedUsername) {
+                document.getElementById("currentUser").textContent = `Logged in as: ${savedUsername}`;
+            } else {
+                document.getElementById("currentUser").textContent = "Please set your username";
+            }
+            loadJournal();
+        };
+
+        function setUsername() {
+            const username = document.getElementById("usernameInput").value.trim();
+            if (username) {
+                localStorage.setItem("username", username);
+                document.getElementById("currentUser").textContent = `Logged in as: ${username}`;
+                document.getElementById("usernameInput").value = "";
+                loadJournal(); // Reload journal for new user
+            } else {
+                alert("Please enter a valid username");
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const msg = document.getElementById("chatInput").value.trim();
+            if (!msg) return;
+
+            const mode = document.getElementById("modeToggle").checked ? "therapist" : "friend";
+            const chatBox = document.getElementById("chatBox");
+            const username = localStorage.getItem("username") || "guest";  // ✅ add this line
+            
+            // Add user message
+            const userMsg = document.createElement("div");
+            userMsg.className = "chat-message user-message";
+            userMsg.innerHTML = `<strong>You:</strong> ${msg}`;
+            chatBox.appendChild(userMsg);
+            
+            // Clear input and show typing indicator
+            document.getElementById("chatInput").value = "";
+            document.getElementById("typingIndicator").style.display = "block";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            fetch("/get", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    msg: msg,
+                    mode: mode,
+                    username: username   // ✅ send username here
+                })
+            })
+            .then(res => res.text())
+            .then(data => {
+                // Hide typing indicator
+                document.getElementById("typingIndicator").style.display = "none";
+                
+                // Add bot message
+                const botMsg = document.createElement("div");
+                botMsg.className = "chat-message bot-message";
+                botMsg.innerHTML = `<strong>MindCare:</strong> ${data}`;
+                chatBox.appendChild(botMsg);
+                
+                chatBox.scrollTop = chatBox.scrollHeight;
+            })
+            .catch(error => {
+                document.getElementById("typingIndicator").style.display = "none";
+                console.error("Error:", error);
+                
+                const errorMsg = document.createElement("div");
+                errorMsg.className = "chat-message bot-message";
+                errorMsg.innerHTML = `<strong>MindCare:</strong> Sorry, I'm having trouble connecting. Please try again.`;
+                chatBox.appendChild(errorMsg);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+
+        function saveJournal() {
+            const entry = document.getElementById("journalEntry").value.trim();
+            if (!entry) {
+                alert("Please write something in your journal entry");
+                return;
+            }
+
+            const username = localStorage.getItem("username") || "guest";
+
+            fetch("/save_journal", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded"
+                },
+                body: new URLSearchParams({
+                    username: username,
+                    entry: entry
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert(data.message);
+                document.getElementById("journalEntry").value = "";
+                loadJournal();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Error saving journal entry. Please try again.");
+            });
+        }
+
+        function loadJournal() {
+            const username = localStorage.getItem("username") || "guest";
+
+            fetch(`/get_journal?username=${username}`)
+            .then(res => res.json())
+            .then(entries => {
+                const historyDiv = document.getElementById("journalHistory");
+                historyDiv.innerHTML = "";
+                
+                if (entries.length === 0) {
+                    historyDiv.innerHTML = '<p style="text-align: center; color: #a0aec0; padding: 20px;">No journal entries yet. Start writing!</p>';
+                    return;
+                }
+                
+                entries.forEach(entry => {
+                    const entryDiv = document.createElement("div");
+                    entryDiv.className = "journal-entry-item";
+                    
+                    const dateDiv = document.createElement("div");
+                    dateDiv.className = "journal-date";
+                    dateDiv.textContent = new Date(entry.date).toLocaleString();
+                    
+                    const textDiv = document.createElement("div");
+                    textDiv.className = "journal-text";
+                    textDiv.textContent = entry.text;
+                    
+                    entryDiv.appendChild(dateDiv);
+                    entryDiv.appendChild(textDiv);
+                    historyDiv.appendChild(entryDiv);
+                });
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                document.getElementById("journalHistory").innerHTML = '<p style="text-align: center; color: #e53e3e; padding: 20px;">Error loading journal entries.</p>';
+            });
+        }
+    </script>
+</body>
+</html>

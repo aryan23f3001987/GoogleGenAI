@@ -1,0 +1,520 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header Styles */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    color: white;
+    font-size: 3rem;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.header p {
+    color: rgba(255,255,255,0.9);
+    font-size: 1.2rem;
+}
+
+/* Layout */
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.card h2 {
+    color: #4a5568;
+    margin-bottom: 20px;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.icon {
+    font-size: 1.5rem;
+}
+
+/* Mode Toggle Styles */
+.mode-toggle {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    justify-content: center;
+    gap: 15px;
+}
+
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+.mode-label {
+    font-weight: 600;
+    color: #4a5568;
+}
+
+/* Chat Box Styles */
+.chat-box {
+    height: 400px;
+    overflow-y: auto;
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #f8fafc;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f8fafc;
+}
+
+.chat-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-box::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.chat-box::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.chat-message {
+    margin-bottom: 15px;
+    padding: 12px 15px;
+    border-radius: 15px;
+    line-height: 1.5;
+    animation: fadeIn 0.5s ease-in;
+}
+
+.user-message {
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    margin-left: 20%;
+    text-align: right;
+}
+
+.bot-message {
+    background: #e2e8f0;
+    color: #2d3748;
+    margin-right: 20%;
+}
+
+/* Input Styles */
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 15px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 25px;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+.chat-input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.send-btn {
+    padding: 15px 25px;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.send-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+/* Journal Styles */
+.journal-entry {
+    width: 100%;
+    height: 150px;
+    padding: 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    outline: none;
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.journal-entry:focus {
+    border-color: #4facfe;
+    box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+}
+
+.save-btn {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(45deg, #4facfe, #00f2fe);
+    color: white;
+    border: none;
+    border-radius: 15px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
+}
+
+.journal-history {
+    height: 300px;
+    overflow-y: auto;
+    border: 2px solid #e2e8f0;
+    border-radius: 15px;
+    padding: 15px;
+    background: #f8fafc;
+}
+
+.journal-entry-item {
+    background: white;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    border-left: 4px solid #4facfe;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.journal-date {
+    font-weight: 600;
+    color: #4facfe;
+    margin-bottom: 5px;
+    font-size: 0.9rem;
+}
+
+.journal-text {
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+/* Username Section Styles */
+.username-section {
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+    padding: 20px;
+    text-align: center;
+}
+
+.username-input {
+    padding: 10px 15px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1rem;
+    margin-right: 10px;
+    outline: none;
+}
+
+.username-input::placeholder {
+    color: rgba(255,255,255,0.7);
+}
+
+.set-username-btn {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.set-username-btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.current-user {
+    color: white;
+    margin-top: 10px;
+    font-weight: 600;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: none;
+    padding: 10px 15px;
+    background: #e2e8f0;
+    border-radius: 15px;
+    margin-right: 20%;
+    margin-bottom: 15px;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 3px;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: #cbd5e0;
+    border-radius: 50%;
+    animation: bounce 1.4s ease-in-out infinite both;
+}
+
+.typing-dots span:nth-child(1) { 
+    animation-delay: -0.32s; 
+}
+
+.typing-dots span:nth-child(2) { 
+    animation-delay: -0.16s; 
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+@keyframes bounce {
+    0%, 80%, 100% { 
+        transform: scale(0); 
+        opacity: 0.5; 
+    }
+    40% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
+    }
+    
+    .card {
+        padding: 20px;
+    }
+    
+    .user-message {
+        margin-left: 10%;
+    }
+    
+    .bot-message {
+        margin-right: 10%;
+    }
+    
+    .username-input {
+        margin-bottom: 10px;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .chat-input {
+        border-radius: 15px;
+    }
+    
+    .send-btn {
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .header h1 {
+        font-size: 1.8rem;
+    }
+    
+    .header p {
+        font-size: 1rem;
+    }
+    
+    .card {
+        padding: 15px;
+    }
+    
+    .chat-box {
+        height: 300px;
+    }
+    
+    .journal-history {
+        height: 250px;
+    }
+    
+    .mode-toggle {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Additional Interactive Elements */
+.send-btn:active {
+    transform: translateY(0);
+}
+
+.save-btn:active {
+    transform: translateY(0);
+}
+
+.set-username-btn:active {
+    transform: scale(0.98);
+}
+
+/* Focus States for Accessibility */
+.toggle-switch:focus-within .slider {
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+.chat-input:focus,
+.journal-entry:focus,
+.username-input:focus {
+    transform: translateY(-1px);
+}
+
+/* Scrollbar Styling for Journal History */
+.journal-history::-webkit-scrollbar {
+    width: 8px;
+}
+
+.journal-history::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.journal-history::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 10px;
+}
+
+.journal-history::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}
+
+/* Loading State */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Error States */
+.error-message {
+    color: #e53e3e;
+    background: #fed7d7;
+    border: 1px solid #feb2b2;
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin: 10px 0;
+}
+
+/* Success States */
+.success-message {
+    color: #38a169;
+    background: #c6f6d5;
+    border: 1px solid #9ae6b4;
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin: 10px 0;
+}
