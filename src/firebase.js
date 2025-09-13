@@ -11,13 +11,13 @@ import { getFirestore } from 'firebase/firestore';
 //   //... rest of your config
 // };
 const firebaseConfig = {
-  apiKey: "AIzaSyAU6UWpw5nU7As9F7S5azpvOhzVSkksx88",
-  authDomain: "gen-ai-596a5.firebaseapp.com",
-  projectId: "gen-ai-596a5",
-  storageBucket: "gen-ai-596a5.firebasestorage.app",
-  messagingSenderId: "275734473351",
-  appId: "1:275734473351:web:a60403485f41d2a163e622",
-  measurementId: "G-SBSR5BT8J6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase
