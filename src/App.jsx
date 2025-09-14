@@ -21,11 +21,14 @@ function App() {
   const userId = user ? user.uid : null;
   const handleLogout = () => signOut(auth);
 
+
+
   // Helper to get current page from location
   function CurrentPageWrapper() {
     const location = useLocation();
     let currentPage = location.pathname.replace('/', '') || 'journal';
-    return <Navbar currentPage={currentPage} user={user} />;
+    // Only show Navbar when logged in
+    return user ? <Navbar currentPage={currentPage} user={user} /> : null;
   }
 
   return (
@@ -33,6 +36,7 @@ function App() {
       <CurrentPageWrapper />
       <Routes>
         <Route path="/login" element={
+          user ? <Navigate to="/journal" replace /> :
           <LoginPage
             auth={auth}
             db={db}
@@ -42,13 +46,10 @@ function App() {
           />
         } />
         <Route path="/journal" element={
-          <Journal
-            user={user}
-            db={db}
-          />
+          user ? <Journal user={user} db={db} onLogout={handleLogout} /> : <Navigate to="/login" replace />
         } />
         <Route path="/chatbot" element={<Chatbot />} />
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<Navigate to={user ? "/journal" : "/login"} replace />} />
       </Routes>
     </Router>
   );

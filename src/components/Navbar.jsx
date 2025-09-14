@@ -43,19 +43,7 @@ const Navbar = ({ currentPage, user }) => {
               <span className={`absolute left-0 -bottom-1 h-0.5 rounded bg-gradient-to-r from-cyan-400 to-fuchsia-500 transition-all duration-200 ${currentPage === 'chatbot' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
             </Link>
           </li>
-          <li>
-            <Link
-              to="/login"
-              className={`relative transition-colors duration-200 ${
-                currentPage === 'login'
-                  ? 'text-white font-semibold'
-                  : 'text-white/80 hover:text-white'
-              } group`}
-            >
-              {user ? 'Profile' : 'Login'}
-              <span className={`absolute left-0 -bottom-1 h-0.5 rounded bg-gradient-to-r from-cyan-400 to-fuchsia-500 transition-all duration-200 ${currentPage === 'login' ? 'w-full' : 'w-0 group-hover:w-full'}`}></span>
-            </Link>
-          </li>
+          {/* Removed login/profile route from Navbar */}
         </ul>
 
         {/* Visit Github Button */}
@@ -103,17 +91,7 @@ const Navbar = ({ currentPage, user }) => {
           >
             Chatbot
           </Link>
-          <Link
-            to="/login"
-            className={`transition-colors duration-200 ${
-              currentPage === 'login'
-                ? 'text-white font-semibold'
-                : 'text-white/80 hover:text-white'
-            }`}
-            onClick={() => setOpen(false)}
-          >
-            {user ? 'Profile' : 'Login'}
-          </Link>
+          {/* Removed login/profile route from mobile menu */}
           <a
             href="https://github.com/"
             target="_blank"

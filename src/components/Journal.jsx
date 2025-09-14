@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 
-const Journal = ({ user, db }) => {
+const Journal = ({ user, db, onLogout }) => {
   const [note, setNote] = useState('');
   const [notes, setNotes] = useState([]);
   const [editId, setEditId] = useState(null);
@@ -45,18 +45,23 @@ const Journal = ({ user, db }) => {
     await deleteDoc(doc(db, 'journalNotes', id));
   };
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen w-full bg-[#181a1b] pt-32">
-        <div className="text-2xl text-white font-semibold bg-black/60 px-8 py-6 rounded-xl shadow-lg">
-          Please login first to access your personal journal.
-        </div>
-      </div>
-    );
-  }
+
 
   return (
-    <div className="min-h-screen w-full bg-[#181a1b] flex flex-col items-center pt-36 pb-12 px-2">
+    <div className="min-h-screen w-full bg-[#181a1b] flex flex-col items-center pt-36 pb-12 px-2 relative">
+      {/* Profile button top right */}
+      <div className="absolute top-6 right-8 z-20 flex items-center gap-2">
+        <div className="bg-white/10 px-3 py-1 rounded-full text-white text-sm font-medium flex items-center gap-2 shadow">
+          <span className="font-semibold">{user.email}</span>
+          <button
+            onClick={onLogout}
+            className="ml-2 px-3 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition"
+            title="Logout"
+          >
+            Logout
+          </button>
+        </div>
+      </div>
       <div className="w-full max-w-2xl bg-white/10 border border-white border-opacity-20 rounded-3xl shadow-2xl backdrop-blur-md p-8 mb-10">
         <h2 className="text-3xl font-bold text-white text-center mb-2 tracking-tight drop-shadow">My Journal</h2>
         <div className="flex justify-center mb-6">
