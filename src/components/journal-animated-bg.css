@@ -1,0 +1,18 @@
+/* Animated gradient background for Journal page */
+.journal-animated-bg {
+  background: linear-gradient(120deg, #232526, #314755, #232526, #6e4c1b, #232526);
+  background-size: 400% 400%;
+  animation: journalGradientMove 24s ease-in-out infinite;
+}
+
+@keyframes journalGradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
