@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy } from 'firebase/firestore';
+import { collection, addDoc, query, where, onSnapshot, doc, updateDoc, deleteDoc, orderBy, serverTimestamp } from 'firebase/firestore';
 
 const Journal = ({ user, db }) => {
   const [note, setNote] = useState('');
@@ -11,9 +11,9 @@ const Journal = ({ user, db }) => {
     if (!user) return;
     const q = query(
       collection(db, 'journalNotes'),
-      where('uid', '==', user.uid),
-      orderBy('updatedAt', 'desc')
-    );
+        where('uid', '==', user.uid),
+        orderBy('createdAt', 'desc')
+          );
     const unsub = onSnapshot(q, (snapshot) => {
       setNotes(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
@@ -26,8 +26,8 @@ const Journal = ({ user, db }) => {
     await addDoc(collection(db, 'journalNotes'), {
       uid: user.uid,
       text: note,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
     setNote('');
   };
@@ -35,7 +35,7 @@ const Journal = ({ user, db }) => {
   const handleEdit = async (id) => {
     await updateDoc(doc(db, 'journalNotes', id), {
       text: editText,
-      updatedAt: new Date(),
+      updatedAt: serverTimestamp(),
     });
     setEditId(null);
     setEditText('');
@@ -114,7 +114,13 @@ const Journal = ({ user, db }) => {
                 <div className="whitespace-pre-wrap text-white text-lg mb-2">{n.text}</div>
                 <div className="flex justify-between items-center text-xs text-gray-300 mt-2">
                   <span>
-                    Last edited: {n.updatedAt?.toDate ? n.updatedAt.toDate().toLocaleString() : ''}
+                    Last edited: {
+                      n.updatedAt && typeof n.updatedAt.toDate === 'function'
+                        ? n.updatedAt.toDate().toLocaleString()
+                        : n.updatedAt && n.updatedAt.seconds
+                          ? new Date(n.updatedAt.seconds * 1000).toLocaleString()
+                          : 'Just now'
+                    }
                   </span>
                   <div className="flex gap-2 opacity-80 group-hover:opacity-100 transition">
                     <button
