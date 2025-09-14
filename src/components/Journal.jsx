@@ -69,11 +69,11 @@ const Journal = ({ user, db, onLogout }) => {
 
   {/* Main Journal Input Card styled as a diary */}
   <div className="w-full max-w-2xl relative z-10 flex justify-center">
-  <div className="relative w-full bg-[#23272e]/90 border-4 border-[#7c5e2a] rounded-[32px] shadow-2xl p-0 overflow-hidden diary-paper transition-transform duration-300 hover:scale-105">
+  <div className="relative w-full bg-[#23272e]/90 border-4 border-[#d1cdc6] rounded-[32px] shadow-2xl p-0 overflow-hidden diary-paper transition-transform duration-300 hover:scale-105">
       {/* Spiral binding effect */}
       <div className="absolute left-0 top-0 h-full flex flex-col justify-between z-20 px-2 py-6">
         {[...Array(8)].map((_, i) => (
-          <div key={i} className="w-3 h-3 bg-[#bfae8e] rounded-full mb-4 shadow-inner border border-[#e0cfa9]" style={{marginBottom: i !== 7 ? '1.5rem' : 0}}></div>
+          <div key={i} className="w-3 h-3 bg-[#bfae8e] rounded-full mb-4 shadow-inner border border-[#e0ddd5]" style={{marginBottom: i !== 7 ? '1.5rem' : 0}}></div>
         ))}
       </div>
       {/* SVG Feather Quill */}
@@ -82,7 +82,7 @@ const Journal = ({ user, db, onLogout }) => {
           <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
         </svg>
       </div>
-      <h2 className="text-3xl font-bold text-[#7c5e2a] text-center mb-2 tracking-tight drop-shadow pt-8 pb-2 font-serif">My Diary</h2>
+      <h2 className="text-3xl font-bold text-[#9d9890] text-center mb-2 tracking-tight drop-shadow pt-8 pb-2 font-serif">My Diary</h2>
       <div className="flex justify-center mb-4">
         <div className="h-1 w-24 bg-gradient-to-r from-yellow-400 via-orange-300 to-pink-300 rounded-full"></div>
       </div>
@@ -128,7 +128,7 @@ const Journal = ({ user, db, onLogout }) => {
         {notes.map(n => (
           <div
             key={n.id}
-            className="relative bg-[#23272e]/90 border-4 border-[#7c5e2a] rounded-[28px] p-8 shadow-xl overflow-hidden transition-all duration-300 group hover:shadow-2xl hover:-translate-y-1 hover:bg-[#23272e]/95 transform rotate-[-1deg] hover:rotate-0 diary-paper"
+            className="relative bg-[#23272e]/90 border-4 border-[#74726e] rounded-[28px] p-8 shadow-xl overflow-hidden transition-all duration-300 group hover:shadow-2xl hover:-translate-y-1 hover:bg-[#23272e]/95 transform rotate-[-1deg] hover:rotate-0 diary-paper"
             style={{ fontFamily: '"Indie Flower", "Comic Sans MS", cursive, sans-serif', lineHeight: '2.2rem' }}
           >
             {/* Lined paper effect for notes */}
