@@ -1,6 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from langchain_pinecone import PineconeVectorStore
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings
 from langchain.chains import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
@@ -12,24 +12,37 @@ import os, uuid
 # 🔹 Import memory helpers
 from src.chat_memory import load_memory, save_memory
 
+# 🔹 Vertex AI imports
+from google.cloud import aiplatform
+from langchain_google_vertexai import ChatVertexAI
+
 app = Flask(__name__)
 
 # ------------------ Load Keys ------------------ #
 load_dotenv()
+
+# Pinecone + OpenAI
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY or ""
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY or ""
+
+# Vertex AI
+GCP_PROJECT = os.getenv("GCP_PROJECT", "marine-fusion-471317-u6")
+GCP_LOCATION = os.getenv("GCP_LOCATION", "us-central1")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+
+# ✅ Ensure service account path is set for Vertex AI
+if GOOGLE_APPLICATION_CREDENTIALS:
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
 
 # ------------------ Embeddings ------------------ #
 embeddings = OpenAIEmbeddings(
     model="text-embedding-3-small",
-    api_key=os.getenv("OPENAI_API_KEY")
+    api_key=OPENAI_API_KEY
 )
 
 # ------------------ Pinecone Vectorstores ------------------ #
-# Chatbot knowledge index
 chat_index_name = "medical-chatbot"
 docsearch = PineconeVectorStore.from_existing_index(
     index_name=chat_index_name,
@@ -37,17 +50,18 @@ docsearch = PineconeVectorStore.from_existing_index(
 )
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
 
-# Journal index
 journal_index_name = "journal-index"
 journal_store = PineconeVectorStore.from_existing_index(
     index_name=journal_index_name,
     embedding=embeddings
 )
 
-# ------------------ Chat Model ------------------ #
-chatModel = ChatOpenAI(
-    model="gpt-4o-mini",
-    api_key=os.getenv("OPENAI_API_KEY")
+# ------------------ Chat Model (Vertex AI Gemini) ------------------ #
+chatModel = ChatVertexAI(
+    model="gemini-2.5-flash",
+    project=GCP_PROJECT,
+    location=GCP_LOCATION,
+    temperature=0.3
 )
 
 # ------------------ Routes ------------------ #
@@ -59,23 +73,15 @@ def index():
 @app.route("/get", methods=["POST"])
 def chat():
     msg = request.form["msg"]
-    username = request.form.get("username", "guest")   # ✅ username from frontend (default guest)
-    mode = request.form.get("mode", "friend")          # toggle mode from frontend
+    username = request.form.get("username", "guest")
+    mode = request.form.get("mode", "friend")
     print(f"User: {msg} | Mode: {mode} | Username: {username}")
 
-    # Load past memory
     memory = load_memory(username)
-
-    # Build memory context string
     memory_context = "\n".join([f"{m['role']}: {m['content']}" for m in memory])
 
-    # Pick system prompt dynamically
-    if mode == "therapist":
-        selected_prompt = system_prompt2
-    else:
-        selected_prompt = system_prompt1
+    selected_prompt = system_prompt2 if mode == "therapist" else system_prompt1
 
-    # Build prompt dynamically (with memory)
     prompt = ChatPromptTemplate.from_messages(
         [
             ("system", selected_prompt + "\n\nConversation history:\n" + memory_context),
@@ -86,11 +92,9 @@ def chat():
     question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
     rag_chain = create_retrieval_chain(retriever, question_answer_chain)
 
-    # Run RAG
     response = rag_chain.invoke({"input": msg})
     answer = response["answer"]
 
-    # Save new messages into memory
     memory.append({"role": "user", "content": msg})
     memory.append({"role": "assistant", "content": answer})
     save_memory(username, memory)
@@ -107,7 +111,6 @@ def save_journal():
     entry_id = f"{username}-{uuid.uuid4().hex}"
     vector = embeddings.embed_query(entry)
 
-    # Save in Journal Index
     journal_store._index.upsert([
         {
             "id": entry_id,
@@ -126,10 +129,9 @@ def save_journal():
 def get_journal():
     username = request.args.get("username")
 
-    # Fetch entries with metadata filter
     results = journal_store._index.query(
         top_k=20,
-        vector=[0] * 1536,  # dummy zero-vector to fetch by filter only
+        vector=[0] * 1536,  # dummy vector to filter only
         filter={"username": {"$eq": username}},
         include_metadata=True
     )
@@ -142,9 +144,7 @@ def get_journal():
         for match in results["matches"]
     ]
 
-    # Sort by date (newest first)
     journals = sorted(journals, key=lambda x: x["date"], reverse=True)
-
     return jsonify(journals)
 
 # ------------------ Run Server ------------------ #

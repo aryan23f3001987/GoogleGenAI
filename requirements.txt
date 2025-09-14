@@ -10,3 +10,5 @@ openai>=1.40.0
 langchain-groq
 uvicorn
 gunicorn
+langchain-google-vertexai
+google-cloud-aiplatform
