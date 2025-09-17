@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: googlegenai
+    branch: main
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 180
+    autoDeploy: true
+    envVars:
+      - key: PINECONE_API_KEY
+      - key: OPENAI_API_KEY
+      - key: GOOGLE_APPLICATION_CREDENTIALS
+      - key: GCP_PROJECT
+      - key: GCP_LOCATION
+    healthCheckPath: /
