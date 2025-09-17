@@ -3,99 +3,23 @@ from dotenv import load_dotenv
 import os
 import sys
 
-# ------------------ Globals ------------------ #
-chatModel = None
-docsearch = None
-retriever = None
-
-print("--> Starting application initialization...")
+# ------------------ Load environment variables at startup ------------------ #
+# This is lightweight and safe to do once at the beginning.
+print("--> Loading environment variables...")
+sys.stdout.flush()
+load_dotenv()
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GCP_PROJECT = os.getenv("GCP_PROJECT")
+GCP_LOCATION = os.getenv("GCP_LOCATION")
+GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+print("--> Environment variables loaded.")
 sys.stdout.flush()
 
 # ------------------ Flask app ------------------ #
-# Define the app early so it exists even if initialization fails.
+# Define the app in the global scope so it's ready to serve.
 app = Flask(__name__, static_folder="static", template_folder="templates")
 
-try:
-    # ------------------ Load environment variables ------------------ #
-    print("--> Loading environment variables...")
-    sys.stdout.flush()
-    load_dotenv()
-    PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    GCP_PROJECT = os.getenv("GCP_PROJECT")
-    GCP_LOCATION = os.getenv("GCP_LOCATION")
-    GOOGLE_APPLICATION_CREDENTIALS = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-
-    # Check for essential variables
-    if not all([PINECONE_API_KEY, OPENAI_API_KEY, GCP_PROJECT, GCP_LOCATION]):
-        raise ValueError("One or more essential environment variables (PINECONE, OPENAI, GCP) are missing.")
-
-    os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
-    os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
-    if GOOGLE_APPLICATION_CREDENTIALS:
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = GOOGLE_APPLICATION_CREDENTIALS
-    print("--> Environment variables loaded.")
-    sys.stdout.flush()
-
-    # ------------------ Preload heavy modules at startup ------------------ #
-    print("--> Importing LangChain modules...")
-    sys.stdout.flush()
-    from langchain_openai import OpenAIEmbeddings
-    from langchain_pinecone import PineconeVectorStore
-    from langchain.chains import create_retrieval_chain
-    from langchain.chains.combine_documents import create_stuff_documents_chain
-    from langchain_core.prompts import ChatPromptTemplate
-    from langchain_google_vertexai import ChatVertexAI
-    from src.prompt import system_prompt1, system_prompt2
-    from src.chat_memory import load_memory, save_memory
-    print("--> LangChain modules imported.")
-    sys.stdout.flush()
-
-    # Embeddings
-    print("--> Initializing OpenAI Embeddings...")
-    sys.stdout.flush()
-    embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
-    print("--> OpenAI Embeddings initialized successfully.")
-    sys.stdout.flush()
-
-    # Pinecone Vectorstore
-    print("--> Initializing Pinecone VectorStore...")
-    sys.stdout.flush()
-    docsearch = PineconeVectorStore.from_existing_index(
-        index_name="medical-chatbot", embedding=embeddings
-    )
-    retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
-    print("--> Pinecone VectorStore initialized successfully.")
-    sys.stdout.flush()
-
-    # Chat Model
-    print("--> Initializing VertexAI Chat Model...")
-    sys.stdout.flush()
-    chatModel = ChatVertexAI(
-        model="gemini-1.5-flash",  # Using a known stable model name
-        project=GCP_PROJECT,
-        location=GCP_LOCATION,
-        temperature=0.3
-    )
-    print("--> VertexAI Chat Model initialized successfully.")
-    sys.stdout.flush()
-
-    # Save in app.config
-    app.config.update({
-        "system_prompt1": system_prompt1,
-        "system_prompt2": system_prompt2,
-        "load_memory": load_memory,
-        "save_memory": save_memory,
-        "create_stuff_documents_chain": create_stuff_documents_chain,
-        "create_retrieval_chain": create_retrieval_chain,
-        "ChatPromptTemplate": ChatPromptTemplate
-    })
-
-except Exception as e:
-    print(f"--> FATAL: An error occurred during initialization: {e}", file=sys.stderr)
-    sys.stderr.flush()
-    # This will cause the Gunicorn process to exit and show the error clearly in logs.
-    raise
 
 # ------------------ Serve React frontend ------------------ #
 @app.route("/", defaults={"path": ""})
@@ -108,45 +32,74 @@ def serve_react(path):
 # ------------------ Chat API ------------------ #
 @app.route("/get", methods=["POST"])
 def chat():
-    # Use global models defined at startup
-    global chatModel, retriever
+    # --- LAZY LOADING HAPPENS HERE ---
+    # The server starts fast with low memory. This code only runs when a user sends a message.
+    print("--> Chat request received. Lazily loading modules and initializing clients...")
+    sys.stdout.flush()
 
-    msg = request.form["msg"]
-    username = request.form.get("username", "guest")
-    mode = request.form.get("mode", "friend")
+    try:
+        # 1. Import all heavy modules inside the function
+        from langchain_openai import OpenAIEmbeddings
+        from langchain_pinecone import PineconeVectorStore
+        from langchain.chains import create_retrieval_chain
+        from langchain.chains.combine_documents import create_stuff_documents_chain
+        from langchain_core.prompts import ChatPromptTemplate
+        from langchain_google_vertexai import ChatVertexAI
+        from src.prompt import system_prompt1, system_prompt2
+        from src.chat_memory import load_memory, save_memory
 
-    load_memory = app.config["load_memory"]
-    save_memory = app.config["save_memory"]
-    create_stuff_documents_chain = app.config["create_stuff_documents_chain"]
-    create_retrieval_chain = app.config["create_retrieval_chain"]
-    ChatPromptTemplate = app.config["ChatPromptTemplate"]
-    system_prompt1 = app.config["system_prompt1"]
-    system_prompt2 = app.config["system_prompt2"]
+        # 2. Initialize clients inside the function
+        # Embeddings
+        embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=OPENAI_API_KEY)
+        
+        # Pinecone Vectorstore
+        docsearch = PineconeVectorStore.from_existing_index(
+            index_name="medical-chatbot", embedding=embeddings
+        )
+        retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k": 3})
+        
+        # Chat Model
+        chatModel = ChatVertexAI(
+            model="gemini-1.5-flash",
+            project=GCP_PROJECT,
+            location=GCP_LOCATION,
+            temperature=0.3
+        )
+        
+        print("--> Initialization complete. Processing user input...")
+        sys.stdout.flush()
 
-    memory = load_memory(username)
-    # Create context from last few messages to avoid overly long prompts
-    memory_context = "\n".join([f"{m['role']}: {m['content']}" for m in memory[-6:]])
-    selected_prompt = system_prompt2 if mode == "therapist" else system_prompt1
+        # 3. Process the request using the locally initialized objects
+        msg = request.form["msg"]
+        username = request.form.get("username", "guest")
+        mode = request.form.get("mode", "friend")
 
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", selected_prompt + "\n\nConversation history:\n" + memory_context),
-        ("human", "{input}"),
-    ])
+        memory = load_memory(username)
+        memory_context = "\n".join([f"{m['role']}: {m['content']}" for m in memory[-6:]])
+        selected_prompt = system_prompt2 if mode == "therapist" else system_prompt1
 
-    question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
-    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-    response = rag_chain.invoke({"input": msg})
-    answer = response["answer"]
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", selected_prompt + "\n\nConversation history:\n" + memory_context),
+            ("human", "{input}"),
+        ])
 
-    memory.append({"role": "user", "content": msg})
-    memory.append({"role": "assistant", "content": answer})
-    save_memory(username, memory)
+        question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
+        rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+        response = rag_chain.invoke({"input": msg})
+        answer = response["answer"]
 
-    return jsonify({"response": answer})
+        memory.append({"role": "user", "content": msg})
+        memory.append({"role": "assistant", "content": answer})
+        save_memory(username, memory)
 
+        return jsonify({"response": answer})
 
-print("--> Initialization complete. Gunicorn can now start the server.")
-sys.stdout.flush()
+    except Exception as e:
+        print(f"--> FATAL: An error occurred during request processing: {e}", file=sys.stderr)
+        sys.stderr.flush()
+        # Return an error to the user
+        return jsonify({"error": "An internal error occurred. Please try again later."}), 500
+
 
 if __name__ == "__main__":
     # This block is for local development only. Gunicorn does not run this.

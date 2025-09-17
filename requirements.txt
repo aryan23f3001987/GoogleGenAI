@@ -1,14 +1,29 @@
-langchain==0.3.26
-flask==3.1.1 
-sentence-transformers==4.1.0
-pypdf==5.6.1 
-python-dotenv==1.1.0
-langchain-pinecone==0.2.8 
-langchain-openai==0.3.24
-langchain-community==0.3.26
-openai>=1.40.0
-langchain-groq
-uvicorn
+# langchain==0.3.26
+# flask==3.1.1 
+# sentence-transformers==4.1.0
+# pypdf==5.6.1 
+# python-dotenv==1.1.0
+# langchain-pinecone==0.2.8 
+# langchain-openai==0.3.24
+# langchain-community==0.3.26
+# openai>=1.40.0
+# langchain-groq
+# uvicorn
+# gunicorn
+# langchain-google-vertexai
+# google-cloud-aiplatform
+
+# Server and environment variables
+flask
 gunicorn
+python-dotenv
+
+# Core LangChain functionality is lightweight
+langchain-core
+
+# Specific LangChain integrations you are using
+# Installing these is much more memory-efficient than installing the full 'langchain' package
+langchain-openai
+langchain-pinecone
 langchain-google-vertexai
 google-cloud-aiplatform
