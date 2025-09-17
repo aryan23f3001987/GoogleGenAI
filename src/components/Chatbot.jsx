@@ -1,36 +1,54 @@
 import React, { useState } from 'react';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
-// Placeholders for API keys
-// const FRIEND_API_KEY = "YOUR_FRIEND_API_KEY_HERE";
-// const PSYCHIATRIST_API_KEY = "YOUR_PSYCHIATRIST_API_KEY_HERE";
-
 const Chatbot = () => {
-  const [version, setVersion] = useState('friend');
+  const [version, setVersion] = useState('friend'); // friend or psychiatrist
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([]);
   const [threads, setThreads] = useState([
     { id: 1, name: 'Session 1', messages: [] },
-    // Add more threads as needed
   ]);
   const [activeThread, setActiveThread] = useState(1);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Handle sending a message (placeholder logic)
-  const handleSend = (e) => {
+  const activeMessages = threads.find(t => t.id === activeThread)?.messages || [];
+
+  const handleSend = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+
+    // Add user message to active thread
     const newMsg = { role: 'user', text: input };
-    setMessages((prev) => [...prev, newMsg]);
+    updateThreadMessages(activeThread, [...activeMessages, newMsg]);
+
+    try {
+      const formData = new FormData();
+      formData.append('msg', input);
+      formData.append('username', 'guest'); // replace with actual userId if needed
+      formData.append('mode', version === 'friend' ? 'friend' : 'therapist');
+
+      const res = await fetch('/get', { method: 'POST', body: formData });
+      const data = await res.json();
+
+      const assistantMsg = { role: 'assistant', text: data.response };
+      updateThreadMessages(activeThread, [...activeMessages, newMsg, assistantMsg]);
+    } catch (err) {
+      console.error('Error calling backend:', err);
+      const errorMsg = { role: 'assistant', text: 'Oops, something went wrong!' };
+      updateThreadMessages(activeThread, [...activeMessages, newMsg, errorMsg]);
+    }
+
     setInput('');
-    // TODO: Call API here using the correct key:
-    // const apiKey = version === 'friend' ? FRIEND_API_KEY : PSYCHIATRIST_API_KEY;
   };
 
-  // UI
+  const updateThreadMessages = (threadId, messages) => {
+    setThreads(prev =>
+      prev.map(t => (t.id === threadId ? { ...t, messages } : t))
+    );
+  };
+
   return (
     <div className="flex min-h-screen bg-[#181a1b] text-white relative">
-      {/* Sidebar for chat threads with slide animation */}
+      {/* Sidebar */}
       <aside
         className={`fixed md:static top-0 left-0 h-full z-30 bg-[#23272e] border-r border-white/10 flex flex-col p-4 transition-transform duration-300 ease-in-out ${
           sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-64 w-0 md:w-16'
@@ -41,7 +59,7 @@ const Chatbot = () => {
           <h2 className={`text-xl font-bold text-white/90 transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>Conversations</h2>
           <button
             className="ml-2 p-1 rounded-full bg-[#181a1b] hover:bg-[#23272e] border border-white/10 text-white transition"
-            onClick={() => setSidebarOpen((v) => !v)}
+            onClick={() => setSidebarOpen(v => !v)}
             aria-label={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
             type="button"
           >
@@ -49,10 +67,10 @@ const Chatbot = () => {
           </button>
         </div>
         <div className={`flex-1 space-y-2 overflow-y-auto transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-          {threads.map((thread) => (
+          {threads.map(thread => (
             <button
               key={thread.id}
-              onClick={() => { setActiveThread(thread.id); setMessages(thread.messages); }}
+              onClick={() => setActiveThread(thread.id)}
               className={`w-full text-left px-4 py-2 rounded-lg transition font-medium ${
                 activeThread === thread.id
                   ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow'
@@ -70,14 +88,12 @@ const Chatbot = () => {
             const newThread = { id: newId, name: `Session ${newId}`, messages: [] };
             setThreads([...threads, newThread]);
             setActiveThread(newId);
-            setMessages([]);
           }}
         >
           + New Chat
         </button>
       </aside>
 
-      {/* Show sidebar button when sidebar is hidden */}
       {!sidebarOpen && (
         <button
           className="fixed top-6 left-2 z-40 p-2 rounded-full bg-[#23272e] border border-white/10 text-white shadow-lg hover:bg-[#181a1b] transition"
@@ -91,7 +107,6 @@ const Chatbot = () => {
 
       {/* Main chat area */}
       <main className="flex-1 flex flex-col relative ml-0 md:ml-64 transition-all duration-300" style={{ marginLeft: sidebarOpen ? 256 : 0 }}>
-        {/* Top bar with version toggle */}
         <div className="flex justify-end items-center p-6 border-b border-white/10 bg-[#1a1d1f]">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-white/70">Advice as:</span>
@@ -112,15 +127,14 @@ const Chatbot = () => {
           </div>
         </div>
 
-        {/* Chat messages */}
         <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-[#23272e] to-[#181a1b]">
-          {messages.length === 0 ? (
+          {activeMessages.length === 0 ? (
             <div className="text-center text-white/50 mt-24 text-lg">Start a conversation about your mental health…</div>
           ) : (
-            messages.map((msg, idx) => (
+            activeMessages.map((msg, idx) => (
               <div
                 key={idx}
-                className={`max-w-xl mx-${msg.role === 'user' ? 'auto ml-auto' : 'auto mr-auto'} px-6 py-4 rounded-2xl shadow-lg ${
+                className={`max-w-xl px-6 py-4 rounded-2xl shadow-lg ${
                   msg.role === 'user'
                     ? 'bg-indigo-600 text-white self-end'
                     : 'bg-white/10 text-white self-start'
@@ -132,11 +146,7 @@ const Chatbot = () => {
           )}
         </div>
 
-        {/* Chat input */}
-        <form
-          onSubmit={handleSend}
-          className="flex items-center gap-4 p-6 border-t border-white/10 bg-[#1a1d1f]"
-        >
+        <form onSubmit={handleSend} className="flex items-center gap-4 p-6 border-t border-white/10 bg-[#1a1d1f]">
           <input
             type="text"
             className="flex-1 px-4 py-3 rounded-xl bg-[#23272e] text-white border border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 shadow-inner"
