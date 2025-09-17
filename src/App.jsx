@@ -47,7 +47,7 @@ function App() {
             db={db}
           />
         } />
-        <Route path="/chatbot" element={<Chatbot />} />
+        <Route path="/chatbot" element={<Chatbot user={user} />} />
         <Route path="/" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
