@@ -1,149 +1,158 @@
-import { useState } from "react";
-import { Send, MessageCircle, User, Bot } from "lucide-react";
+import React, { useState } from 'react';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
-const Chatbot = ({ user }) => {
-  const [input, setInput] = useState("");
+// Placeholders for API keys
+// const FRIEND_API_KEY = "YOUR_FRIEND_API_KEY_HERE";
+// const PSYCHIATRIST_API_KEY = "YOUR_PSYCHIATRIST_API_KEY_HERE";
+
+const Chatbot = () => {
+  const [version, setVersion] = useState('friend');
+  const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [threads, setThreads] = useState([
+    { id: 1, name: 'Session 1', messages: [] },
+    // Add more threads as needed
+  ]);
+  const [activeThread, setActiveThread] = useState(1);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const username = user?.email || "guest"; // fallback if not logged in
-
-  const sendMessage = async () => {
+  // Handle sending a message (placeholder logic)
+  const handleSend = (e) => {
+    e.preventDefault();
     if (!input.trim()) return;
-
-    // Show user message immediately
-    const userMsg = { sender: "user", text: input };
-    setMessages((prev) => [...prev, userMsg]);
-
-    setLoading(true);
-
-    try {
-      // Call Flask backend
-      const formData = new FormData();
-      formData.append("msg", input);
-      formData.append("username", username); // use logged-in username
-      formData.append("mode", "friend");    // or "therapist"
-
-      const res = await fetch("http://localhost:8080/get", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await res.json();
-      const botReply = data.response;
-
-      setMessages((prev) => [...prev, { sender: "bot", text: botReply }]);
-    } catch (err) {
-      console.error("Chat error:", err);
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: "⚠️ Error connecting to chatbot." },
-      ]);
-    }
-
-    setLoading(false);
-    setInput("");
+    const newMsg = { role: 'user', text: input };
+    setMessages((prev) => [...prev, newMsg]);
+    setInput('');
+    // TODO: Call API here using the correct key:
+    // const apiKey = version === 'friend' ? FRIEND_API_KEY : PSYCHIATRIST_API_KEY;
   };
 
+  // UI
   return (
-    <div className="min-h-screen bg-gray-950 p-4">
-      <div className="flex flex-col max-w-2xl mx-auto mt-8 bg-gray-900 rounded-2xl shadow-2xl overflow-hidden h-[90vh] border border-gray-800">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-          <div className="flex items-center gap-3">
-            <div className="bg-white bg-opacity-20 p-2 rounded-full">
-              <MessageCircle className="w-6 h-6" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">AI Assistant</h2>
-              <p className="text-blue-100 text-sm">Always here to help</p>
+    <div className="flex min-h-screen bg-[#181a1b] text-white relative">
+      {/* Sidebar for chat threads with slide animation */}
+      <aside
+        className={`fixed md:static top-0 left-0 h-full z-30 bg-[#23272e] border-r border-white/10 flex flex-col p-4 transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? 'translate-x-0 w-64' : '-translate-x-64 w-0 md:w-16'
+        }`}
+        style={{ minWidth: sidebarOpen ? 256 : 0, maxWidth: 256 }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className={`text-xl font-bold text-white/90 transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>Conversations</h2>
+          <button
+            className="ml-2 p-1 rounded-full bg-[#181a1b] hover:bg-[#23272e] border border-white/10 text-white transition"
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+            type="button"
+          >
+            {sidebarOpen ? <FiChevronLeft size={22} /> : <FiChevronRight size={22} />}
+          </button>
+        </div>
+        <div className={`flex-1 space-y-2 overflow-y-auto transition-opacity duration-200 ${sidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+          {threads.map((thread) => (
+            <button
+              key={thread.id}
+              onClick={() => { setActiveThread(thread.id); setMessages(thread.messages); }}
+              className={`w-full text-left px-4 py-2 rounded-lg transition font-medium ${
+                activeThread === thread.id
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow'
+                  : 'bg-white/5 text-white/80 hover:bg-white/10'
+              }`}
+            >
+              {thread.name}
+            </button>
+          ))}
+        </div>
+        <button
+          className={`mt-6 w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 transition font-semibold ${sidebarOpen ? '' : 'opacity-0 pointer-events-none'}`}
+          onClick={() => {
+            const newId = threads.length + 1;
+            const newThread = { id: newId, name: `Session ${newId}`, messages: [] };
+            setThreads([...threads, newThread]);
+            setActiveThread(newId);
+            setMessages([]);
+          }}
+        >
+          + New Chat
+        </button>
+      </aside>
+
+      {/* Show sidebar button when sidebar is hidden */}
+      {!sidebarOpen && (
+        <button
+          className="fixed top-6 left-2 z-40 p-2 rounded-full bg-[#23272e] border border-white/10 text-white shadow-lg hover:bg-[#181a1b] transition"
+          onClick={() => setSidebarOpen(true)}
+          aria-label="Show sidebar"
+          type="button"
+        >
+          <FiChevronRight size={22} />
+        </button>
+      )}
+
+      {/* Main chat area */}
+      <main className="flex-1 flex flex-col relative ml-0 md:ml-64 transition-all duration-300" style={{ marginLeft: sidebarOpen ? 256 : 0 }}>
+        {/* Top bar with version toggle */}
+        <div className="flex justify-end items-center p-6 border-b border-white/10 bg-[#1a1d1f]">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-white/70">Advice as:</span>
+            <div className="flex gap-2 bg-[#23272e] rounded-lg p-1">
+              <button
+                className={`px-4 py-1 rounded-lg font-semibold transition ${version === 'friend' ? 'bg-indigo-600 text-white' : 'text-white/70 hover:bg-indigo-700/30'}`}
+                onClick={() => setVersion('friend')}
+              >
+                Friend
+              </button>
+              <button
+                className={`px-4 py-1 rounded-lg font-semibold transition ${version === 'psychiatrist' ? 'bg-purple-600 text-white' : 'text-white/70 hover:bg-purple-700/30'}`}
+                onClick={() => setVersion('psychiatrist')}
+              >
+                Psychiatrist
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Chat window */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gradient-to-b from-gray-800 to-gray-900">
-          {messages.length === 0 && (
-            <div className="flex items-center justify-center h-full text-gray-400">
-              <div className="text-center">
-                <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-600" />
-                <p className="text-lg font-medium">Start a conversation</p>
-                <p className="text-sm">Send a message to get started!</p>
-              </div>
-            </div>
-          )}
-          
-          <div className="space-y-4">
-            {messages.map((m, i) => (
+        {/* Chat messages */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-gradient-to-b from-[#23272e] to-[#181a1b]">
+          {messages.length === 0 ? (
+            <div className="text-center text-white/50 mt-24 text-lg">Start a conversation about your mental health…</div>
+          ) : (
+            messages.map((msg, idx) => (
               <div
-                key={i}
-                className={`flex items-start gap-3 ${
-                  m.sender === "user" ? "flex-row-reverse" : ""
+                key={idx}
+                className={`max-w-xl mx-${msg.role === 'user' ? 'auto ml-auto' : 'auto mr-auto'} px-6 py-4 rounded-2xl shadow-lg ${
+                  msg.role === 'user'
+                    ? 'bg-indigo-600 text-white self-end'
+                    : 'bg-white/10 text-white self-start'
                 }`}
               >
-                {/* Avatar */}
-                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                  m.sender === "user" 
-                    ? "bg-blue-500 text-white" 
-                    : "bg-gray-700 text-gray-300"
-                }`}>
-                  {m.sender === "user" ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-                </div>
-                
-                {/* Message bubble */}
-                <div className={`max-w-[75%] px-4 py-3 rounded-2xl shadow-sm ${
-                  m.sender === "user"
-                    ? "bg-blue-500 text-white rounded-tr-sm"
-                    : "bg-gray-700 text-gray-100 border border-gray-600 rounded-tl-sm"
-                }`}>
-                  <p className="text-sm leading-relaxed">{m.text}</p>
-                </div>
+                {msg.text}
               </div>
-            ))}
-            
-            {loading && (
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-8 h-8 bg-gray-700 text-gray-300 rounded-full flex items-center justify-center">
-                  <Bot className="w-4 h-4" />
-                </div>
-                <div className="bg-gray-700 border border-gray-600 px-4 py-3 rounded-2xl rounded-tl-sm shadow-sm">
-                  <div className="flex items-center gap-1">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    </div>
-                    <span className="text-sm text-gray-300 ml-2">AI is thinking...</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+            ))
+          )}
         </div>
 
-        {/* Input area */}
-        <div className="p-6 bg-gray-900 border-t border-gray-700">
-          <div className="flex items-center gap-3 bg-gray-800 rounded-2xl p-2">
-            <input
-              className="flex-1 bg-transparent border-none outline-none px-4 py-3 text-gray-100 placeholder-gray-400"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message..."
-              onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || loading}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-            >
-              ➤
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            Press Enter to send • Connected as {username}
-          </p>
-        </div>
-      </div>
+        {/* Chat input */}
+        <form
+          onSubmit={handleSend}
+          className="flex items-center gap-4 p-6 border-t border-white/10 bg-[#1a1d1f]"
+        >
+          <input
+            type="text"
+            className="flex-1 px-4 py-3 rounded-xl bg-[#23272e] text-white border border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 placeholder-gray-400 shadow-inner"
+            placeholder="Type your message…"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            required
+          />
+          <button
+            type="submit"
+            className="px-8 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold shadow-lg hover:scale-105 transition-all"
+          >
+            Send
+          </button>
+        </form>
+      </main>
     </div>
   );
 };
