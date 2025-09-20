@@ -60,7 +60,7 @@ def chat():
         
         # Chat Model
         chatModel = ChatVertexAI(
-            model="gemini-1.5-flash",
+            model="gemini-2.5-flash",
             project=GCP_PROJECT,
             location=GCP_LOCATION,
             temperature=0.3
